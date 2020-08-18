@@ -1,0 +1,13 @@
+citHeader("To cite the 'pathmodelfit' R package and methods paper in publications use:")
+
+citEntry(entry = "Manual",
+         title        = "{pathmodelfit: Fit Indices for the Path Component of Latent Variable Structural Models}",
+         author       = personList(as.person("Steven Andrew Culpepper"),
+                                   as.person("Larry Williams")
+                                  ),
+         year         = 2020,
+         textVersion  = paste("Culpepper, S. A. and Williams, L. (2020)",
+                              "pathmodelfit: Fit Indices for the Path Component of Latent Variable Structural Models.",
+                              "URL https://cran.r-project.org/package=pathmodelfit.")
+)
+
