@@ -3,7 +3,7 @@
 #' \code{pathmodelfit} computes fit indices for evaluating the path component of latent variable structural equation models. Available fit indices include RMSEA-P and NSCI-P originally presented and evaluated by Williams and O'Boyle (2011) and demonstrated by O'Boyle and Williams (2011) and Williams, O'Boyle, & Yu, (2019). Also included are fit indices described by Hancock and Mueller (2011).
 #'
 #' @param lavaanoutput A \code{lavaan} \code{sem} object.
-#' @return A vector with RMSEA-P, a 90 percent confidence interval for RMSEA-P, NSCI-P, and SRMRs, RMSEAs, TLIs, and CFIs.
+#' @return A vector with RMSEA-P, a p-value for the chi-square test comparing the theoretical and saturated model, a 90 percent confidence interval for RMSEA-P, NSCI-P, and SRMRs, RMSEAs, TLIs, and CFIs.
 #' @import lavaan
 #' @export
 #' @references
@@ -33,11 +33,11 @@
 #' fit <- sem(model4, sample.cov = mediationVC, sample.nobs = 232)
 #' pathmodelfit(fit)
 #'
+
 pathmodelfit<-function(lavaanoutput){
   #extracting data features
   fit<-lavaanoutput
   N<-fit@loglik$ntotal
-  vcdata<-eval(fit@call$sample.cov)
   model<-eval(fit@call$model)
   #setting structural paths from fit to 0
   structuralpaths<-which(fit@ParTable$op=='~')
@@ -45,7 +45,12 @@ pathmodelfit<-function(lavaanoutput){
   ptab0$est<-NULL
   ptab0$se<-NULL
   ptab0$free[structuralpaths]<-0
-  fit0 <- sem(ptab0, sample.cov = vcdata, sample.nobs = N)
+
+  #updating lavaan call to use ptab0 model
+  tmpnullcall<-as.list(fit@call)
+  tmpnullcall$model <- as.name('ptab0')
+  nullcall <- as.call(tmpnullcall)
+  fit0 <- eval(nullcall)
 
   #saturated structural model
   eqpos<-gregexpr("\n",model)[[1]]
@@ -65,11 +70,12 @@ pathmodelfit<-function(lavaanoutput){
   structural<-measurement==F & covariance==F
   modsat<-paste0(modeqs[!structural],collapse = '')
 
-  fit1 <- sem(modsat, sample.cov = vcdata, sample.nobs = N)
+  tmpsatcall<-as.list(fit@call)
+  tmpsatcall$model <- as.name('modsat')
+  satcall <- as.call(tmpsatcall)
+  fit1 <- eval(satcall)
 
   #compute RMSEA-P
-
-
   X2ss<-fit1@test[[1]]$stat
   dfss<-fit1@test[[1]]$df
 
@@ -78,6 +84,7 @@ pathmodelfit<-function(lavaanoutput){
   RMSEAP<-sqrt(((X2t-X2ss)-(dft-dfss))/((dft-dfss)*(N-1)))
 
   #RMSEAP CI
+  #computations from Williams & O'Boyle excel spreadsheet
   B2<-N
   E2<-X2t
   C2<-X2ss
@@ -103,22 +110,47 @@ pathmodelfit<-function(lavaanoutput){
   L2<-sqrt(AA2/(H2*B2-1))
   M2<-sqrt(AB2/(H2*B2-1))
 
-  #compute NSCI-P
+  #computing p-value for rmsea-p model comparison
+  pvalue <- anova(fit,fit1)$"Pr(>Chisq)"[2]
+
+  #compute NSCI-P, which is CFI-P
   X2sn<-fit0@test[[1]]$stat
   dfsn<-fit0@test[[1]]$df
   NSCIP<-((X2sn-X2t)-(dfsn-dft))/((X2sn-X2ss)-(dfsn-dfss))
-  output<-c(RMSEAP,L2,M2,NSCIP)
-  labs<-c('RMSEA-P','RMSEA-P 90% lower bound','RMSEA-P 90% upper bound','NSCI-P')
+  output<-c(RMSEAP,pvalue,L2,M2,NSCIP)
+  labs<-c('RMSEA-P','Theo. vs. Sat. p-value','RMSEA-P 90% lower bound','RMSEA-P 90% upper bound','NSCI-P')
 
   #compute Hancock and Mueller
-  impliedlvvcmatrix<-lavTech(fit1,what='cov.lv')[[1]]
+  #extracting the implied latent variable vc matrix.
+  #this will be a list if there are multiple groups
+  impliedlvvcmatrix<-lavTech(fit1,what='cov.lv')
   latenteqs<-(fit1@ParTable$op=="=~")
   lvnames<-unique(fit1@ParTable$lhs[latenteqs])
-  colnames(impliedlvvcmatrix)<-lvnames
-  rownames(impliedlvvcmatrix)<-lvnames
+  for (i in seq_along(impliedlvvcmatrix)){
+    colnames(impliedlvvcmatrix[[i]]) <- lvnames
+    rownames(impliedlvvcmatrix[[i]]) <- lvnames
+  }
   modlvstructure<-paste0(modeqs[structural],collapse = '')
 
-  fitwithimplied <- sem(modlvstructure, sample.cov = impliedlvvcmatrix, sample.nobs = N)
+  tmpimpliedcall<-as.list(fit@call)
+  tmpimpliedcall$model <- as.name('modlvstructure')
+
+  #check whether 'data' or 'sample.cov' is used
+  name_eq_data<-(names(tmpimpliedcall) %in% 'data')
+  check<-max(name_eq_data)
+
+  #if a data frame was specified, change 'data' to 'sample.cov' to input implied vc
+  if(check==1){
+    names(tmpimpliedcall)[which(name_eq_data==T)] <- 'sample.cov'
+  }
+  tmpimpliedcall$sample.cov <- as.name('impliedlvvcmatrix')
+
+  #specifysample size, which may be a list for multi group application
+  Samplesize<-fit@Data@nobs
+  tmpimpliedcall$sample.nobs <- as.name('Samplesize')
+  impliedcall <- as.call(tmpimpliedcall)
+  fitwithimplied <- eval(impliedcall)
+
   Hancock<-fitMeasures(fitwithimplied,fit.measures = c('srmr','rmsea','tli','cfi'))
   names(Hancock)<-paste0(names(Hancock),'.s')
 

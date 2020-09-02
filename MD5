@@ -1,11 +1,11 @@
-7a5a3ae817842f4503c6da5d1f5de0bd *DESCRIPTION
+f79d2bc93073e618c529c235f47140d3 *DESCRIPTION
 5e0f5f981435e739c62b5240c137b722 *NAMESPACE
 72b99b2b344afd11515a0a2a3781cad4 *R/mediationVC-data.R
 e84f12de14940f441d6597a239a5e42b *R/pathmodelfit-internal.R
-c6d6c22326c76e7be9d3e18f1ddb2c8b *R/pathmodelfit.R
+6403d39748009eff81488ad8e12d9c10 *R/pathmodelfit.R
 3d5ac87e1d1ed1471d3a8334e4be0941 *data/mediationVC.rda
 dceee7cfae015526763bf37963b93ddc *inst/CITATION
 afaf51c7c190afe07c0de495f26eb02a *inst/REFERENCES.bib
 0182a9e35492b9bcde395bed067d53c6 *man/mediationVC.Rd
 0c970e2f96d634093bf3ea1d217efdb4 *man/pathmodelfit-package.Rd
-778d9c9e11851abc8c68b4b6295f8c3f *man/pathmodelfit.Rd
+a597b82896eaf15445bd300c398d47cc *man/pathmodelfit.Rd

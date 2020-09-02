@@ -10,7 +10,7 @@ pathmodelfit(lavaanoutput)
 \item{lavaanoutput}{A \code{lavaan} \code{sem} object.}
 }
 \value{
-A vector with RMSEA-P, a 90 percent confidence interval for RMSEA-P, NSCI-P, and SRMRs, RMSEAs, TLIs, and CFIs.
+A vector with RMSEA-P, a p-value for the chi-square test comparing the theoretical and saturated model, a 90 percent confidence interval for RMSEA-P, NSCI-P, and SRMRs, RMSEAs, TLIs, and CFIs.
 }
 \description{
 \code{pathmodelfit} computes fit indices for evaluating the path component of latent variable structural equation models. Available fit indices include RMSEA-P and NSCI-P originally presented and evaluated by Williams and O'Boyle (2011) and demonstrated by O'Boyle and Williams (2011) and Williams, O'Boyle, & Yu, (2019). Also included are fit indices described by Hancock and Mueller (2011).
